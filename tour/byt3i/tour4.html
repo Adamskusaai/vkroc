@@ -262,8 +262,8 @@ const AR_RX=new RegExp(P.get('arhide')||'ground|lawn|grass|terrain|^path$|fence|
 const AR_KEEP=/mirror|lamp|globe|picture|shower|black_glass|tv_|vase|bottle/i;
 const AR_HIDE=[];let __bg=null;window.__ar=()=>AR;
 function arScene(on){if(on){__bg=scene.background;scene.background=null;renderer.setClearColor(0x000000,0);AR_HIDE.length=0;
-  world.traverse(o=>{if(!o.isMesh||!o.visible)return;const ms=Array.isArray(o.material)?o.material:[o.material];let names=ms.map(m=>m&&m.name||'');for(let q=o;q&&q!==world;q=q.parent)names.push(q.name||'');
-   if(names.some(n=>AR_RX.test(n))&&!AR_KEEP.test((o.name||'')+' '+ms.map(m=>m&&m.name).join(' '))){o.visible=false;AR_HIDE.push(o);}});
+  world.traverse(o=>{if(!o.isMesh||!o.visible)return;const ms=Array.isArray(o.material)?o.material:[o.material];const mn=ms.map(m=>m&&m.name||'');const nn=[];for(let q=o;q&&q!==world;q=q.parent)nn.push(q.name||'');
+   if((mn.every(n=>AR_RX.test(n))||(nn.some(n=>AR_RX.test(n))&&!/frame|wall|ram|rail/i.test(o.name||'')))&&!AR_KEEP.test((o.name||'')+' '+ms.map(m=>m&&m.name).join(' '))){o.visible=false;AR_HIDE.push(o);}});
   window.__arHidden=AR_HIDE.map(o=>o.name);}
  else{if(__bg)scene.background=__bg;renderer.setClearColor(0x000000,1);AR_HIDE.forEach(o=>o.visible=true);AR_HIDE.length=0;}}
 window.arScene=arScene;
