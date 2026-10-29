@@ -48,14 +48,17 @@ export class Locomotion{
   const N=40;this.arcPts=new Float32Array(N*3);const ag=new THREE.BufferGeometry();ag.setAttribute('position',new THREE.BufferAttribute(this.arcPts,3));
   this.arc=new THREE.Line(ag,new THREE.LineBasicMaterial({color:0x44ff88,depthTest:false,transparent:true}));this.arc.renderOrder=9;this.arc.frustumCulled=false;this.arc.visible=false;scene.add(this.arc);
   this.ring=new THREE.Mesh(new THREE.RingGeometry(0.2,0.27,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x44ff88,depthTest:false}));this.ring.renderOrder=9;this.ring.visible=false;scene.add(this.ring);
-  this.target=null;this.lift=0;this.vspeed=1.0;this.liftMin=-3;this.liftMax=12;}
+  this.target=null;this.lift=0;this.eye=null;this.vspeed=1.0;this.liftMin=-3;this.liftMax=12;}
  headPos(){this.camera.getWorldPosition(this.head);return this.head;}
+ // physical elevation of the user's real feet above the floor where the session started (real stairs!).
+ // local-floor head y = eye height + real elevation; eye height is captured once when the session starts.
+ elev(){const y=this.camera.position.y;if(this.eye===null){if(y>1.0)this.eye=y;else return 0;}return Math.max(0,y-this.eye);}
  // place body so that head (x,z) is at x,z and feet at y
- placeFeet(x,y,z){const h=this.headPos();this.rig.position.x+=x-h.x;this.rig.position.z+=z-h.z;this.rig.position.y=y+this.lift;}
+ placeFeet(x,y,z){const h=this.headPos();this.rig.position.x+=x-h.x;this.rig.position.z+=z-h.z;this.rig.position.y=y+this.lift-this.elev();}
  resetLift(){this.rig.position.y-=this.lift;this.lift=0;}
- init(){const h=this.headPos();this.feet.set(h.x,this.rig.position.y-this.lift,h.z);const f=this.body.floor(this.feet);if(f!==null)this.feet.y=f;this.body.resolve(this.feet);this.placeFeet(this.feet.x,this.feet.y,this.feet.z);}
+ init(){const h=this.headPos();this.feet.set(h.x,this.rig.position.y-this.lift+this.elev(),h.z);const f=this.body.floor(this.feet);if(f!==null)this.feet.y=f;this.body.resolve(this.feet);this.placeFeet(this.feet.x,this.feet.y,this.feet.z);}
  update(dt,sources){if(!this.enabled)return;dt=Math.min(dt,0.05);const h=this.headPos();
-  const p=this.feet.set(h.x,this.rig.position.y-this.lift,h.z);const d=new THREE.Vector3();
+  const el=this.elev();const p=this.feet.set(h.x,this.rig.position.y-this.lift+el,h.z);const d=new THREE.Vector3();
   for(const s of sources){const g=s.gamepad;if(!g||s.hand)continue;const [x,y]=stick(g);
    if(s.handedness==='left'){if(x||y){const q=new THREE.Quaternion();this.camera.getWorldQuaternion(q);const fw=new THREE.Vector3(0,0,-1).applyQuaternion(q);fw.y=0;
      if(fw.lengthSq()<1e-4)fw.set(0,1,0).applyQuaternion(q).negate().setY(0);fw.normalize();const rt=new THREE.Vector3(-fw.z,0,fw.x);
@@ -65,7 +68,8 @@ export class Locomotion{
     if(Math.abs(y)>0.25&&Math.abs(y)>Math.abs(x)*1.5)this.lift=THREE.MathUtils.clamp(this.lift-y*this.vspeed*dt,this.liftMin,this.liftMax);
     const b3=g.buttons[3];if(b3&&b3.pressed&&!this._b3)this.lift=0;this._b3=!!(b3&&b3.pressed);}}
   const before=p.clone();this.body.move(p,d); // includes push-out when the user physically walks into a wall
-  this.rig.position.x+=p.x-before.x;this.rig.position.z+=p.z-before.z;this.rig.position.y=p.y+this.lift;}
+  this.rig.position.x+=p.x-before.x;this.rig.position.z+=p.z-before.z;// floor-follow only for stick motion: physical walking (incl. real stairs) already moves the head, never add the floor height twice
+  if(d.lengthSq()>1e-10)this.rig.position.y=p.y+this.lift-el;}
  turn(a){const h=this.headPos().clone();this.rig.position.sub(h).applyAxisAngle(new THREE.Vector3(0,1,0),a).add(h);this.rig.rotation.y+=a;this.rig.updateMatrixWorld(true);}
  // teleport arc from an Object3D (controller)
  updateArc(ctrl){const o=new THREE.Vector3().setFromMatrixPosition(ctrl.matrixWorld);const dir=new THREE.Vector3(0,0,-1).transformDirection(ctrl.matrixWorld);
