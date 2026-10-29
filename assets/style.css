@@ -88,9 +88,10 @@ form.inq .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}form.inq .note
 footer{padding:56px 0 32px;font-size:14px;color:#999;background:var(--ink)}
 footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px;margin-bottom:36px}
 footer img{height:22px}footer a{text-decoration:none;color:#ccc;display:block;padding:3px 0}footer a:hover{color:var(--or)}
-footer h4{color:#fff;font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 10px}
+footer h4,footer .fh{color:#fff;font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 10px}
 footer .bottom{border-top:1px solid #222;padding-top:20px}
 .js .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}.js .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.reveal{opacity:1;transform:none}}
 @media(max-width:960px){.steps.five,.cards.four{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:860px){.steps,.steps.five,.grid,.cards,.cards.two,.cards.four,.who,.video,.contact,.service,.cond,footer .cols,form.inq .row{grid-template-columns:1fr}.service.rev .media{order:0}.grid .wide,.grid .span2{grid-column:auto;grid-row:auto}.grid .span2{aspect-ratio:16/9}section{padding:64px 0}.page-hero{padding:56px 0 40px}}
+.paper .tag{color:#B23C17}
