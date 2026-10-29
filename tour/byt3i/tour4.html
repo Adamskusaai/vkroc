@@ -41,6 +41,7 @@ const SPOTS=[['🏡 Pred domom',5.75,13.5,0,0],['🌳 Záhrada',-6.0,10.0,0,-53]
 if(P.get('spots')==='real')SPOTS.splice(0,SPOTS.length,['Pred domom',5.0,13.0,0,0],['Z\u00e1hrada',13.0,9.0,0,60],['Ob\u00fdva\u010dka',6.6,4.35,0,90],['Kuchy\u0148a',3.0,4.95,0,90],['K\u00fape\u013e\u0148a 1.06',1.45,2.95,0,0],['Izba 2.02',3.3,5.6,F2,90],['Izba 2.04',5.45,5.85,F2,-90],['Izba 2.05',5.3,2.95,F2,-45]);
 if(P.get('spots')==='stano')SPOTS.splice(0,SPOTS.length,['Pred domom',21.5,2.6,-0.31,90],['Vstup',9.9,2.55,0,90],['Ob\u00fdva\u010dka',5.5,4.2,0,-120],['Kuchy\u0148a',3.0,4.95,0,90],['K\u00fape\u013e\u0148a 1.06',1.6,3.3,0,0],['Izba 2.02',3.3,5.6,F2,90],['Izba 2.04',5.45,5.85,F2,-90],['Izba 2.05',5.3,2.95,F2,-45],['\u0160atn\u00edk 2.03',6.1,7.5,F2,-90],['K\u00fape\u013e\u0148a 2.07',1.6,3.3,F2,0]);
 if(P.get('spots')==='byt3i')SPOTS.splice(0,SPOTS.length,['Vstup',4.4,0.7,0,180],['Ob\u00fdva\u010dka',8.7,7.0,0,75],['Kuchy\u0148a',8.2,4.9,0,0],['Sp\u00e1l\u0148a',2.9,4.6,0,135],['Detsk\u00e1 izba',2.8,2.9,0,45],['K\u00fape\u013e\u0148a',5.6,1.7,0,-60],['WC',5.5,3.7,0,0],['Lod\u017eia',6.5,8.6,0,170]);
+const HOME=(P.get('spots')==='byt3i')?0:2;
 let spotIdx=parseInt(P.get('start')||'2');
 const status=document.getElementById('status');
 if(P.get('nohelp'))document.getElementById('help').style.display='none';
@@ -105,14 +106,14 @@ renderer.xr.addEventListener('sessionend',()=>goSpot(spotIdx));
 // 2D UI
 const ui=document.getElementById('ui');
 function buildUI(){ui.innerHTML='';SPOTS.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s[0];if(i===spotIdx)b.className='on';b.onclick=()=>goSpot(i);ui.appendChild(b);});
- const h=document.createElement('button');h.textContent='🏠 Domov';h.onclick=()=>goSpot(2);ui.appendChild(h);
+ const h=document.createElement('button');h.textContent='🏠 Domov';h.onclick=()=>goSpot(HOME);ui.appendChild(h);
  const d=document.createElement('button');d.textContent=(window.__dh&&window.__dh.on)?'↩ Späť dnu':'🏠 Model domu';if(window.__dh&&window.__dh.on)d.className='on';d.onclick=()=>toggleDH();ui.appendChild(d);
  if(ALT){const v=document.createElement('button');v.textContent='⇄ '+NAMES[1-cur];v.onclick=()=>setVar(1-cur);ui.appendChild(v);} if(P.get('noui'))ui.style.display='none';}
 // ---------- VR panel ----------
 const cv=document.createElement('canvas');cv.width=1024;cv.height=1024;const cx=cv.getContext('2d');const ptex=new THREE.CanvasTexture(cv);ptex.colorSpace=THREE.SRGBColorSpace;
 const panel=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.8),new THREE.MeshBasicMaterial({map:ptex,transparent:true,depthTest:false}));panel.renderOrder=10;panel.visible=false;scene.add(panel);
 let ITEMS=[];
-function drawPanel(){ITEMS=[...SPOTS.map((s,i)=>({t:s[0],a:()=>goSpot(i),on:i===spotIdx})),{t:'🏠 Domov',a:()=>goSpot(2)},{t:(window.__dh&&window.__dh.on)?'↩ Späť dnu':'🏠 Model domu',a:()=>toggleDH()}];
+function drawPanel(){ITEMS=[...SPOTS.map((s,i)=>({t:s[0],a:()=>goSpot(i),on:i===spotIdx})),{t:'🏠 Domov',a:()=>goSpot(HOME)},{t:(window.__dh&&window.__dh.on)?'↩ Späť dnu':'🏠 Model domu',a:()=>toggleDH()}];
  if(ALT)ITEMS.push({t:'⇄ '+NAMES[1-cur],a:()=>setVar(1-cur)});ITEMS.push({t:'✖ Zavrieť menu',a:()=>showPanel(false)});
  cx.clearRect(0,0,1024,1024);cx.fillStyle='#101418e8';cx.beginPath();cx.roundRect(0,0,1024,1024,40);cx.fill();
  cx.fillStyle='#fff';cx.font='bold 46px sans-serif';cx.fillText('Kam chceš ísť?',40,70);
