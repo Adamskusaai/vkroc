@@ -48,20 +48,24 @@ export class Locomotion{
   const N=40;this.arcPts=new Float32Array(N*3);const ag=new THREE.BufferGeometry();ag.setAttribute('position',new THREE.BufferAttribute(this.arcPts,3));
   this.arc=new THREE.Line(ag,new THREE.LineBasicMaterial({color:0x44ff88,depthTest:false,transparent:true}));this.arc.renderOrder=9;this.arc.frustumCulled=false;this.arc.visible=false;scene.add(this.arc);
   this.ring=new THREE.Mesh(new THREE.RingGeometry(0.2,0.27,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x44ff88,depthTest:false}));this.ring.renderOrder=9;this.ring.visible=false;scene.add(this.ring);
-  this.target=null;}
+  this.target=null;this.lift=0;this.vspeed=1.0;this.liftMin=-3;this.liftMax=12;}
  headPos(){this.camera.getWorldPosition(this.head);return this.head;}
  // place body so that head (x,z) is at x,z and feet at y
- placeFeet(x,y,z){const h=this.headPos();this.rig.position.x+=x-h.x;this.rig.position.z+=z-h.z;this.rig.position.y=y;}
- init(){const h=this.headPos();this.feet.set(h.x,this.rig.position.y,h.z);const f=this.body.floor(this.feet);if(f!==null)this.feet.y=f;this.body.resolve(this.feet);this.placeFeet(this.feet.x,this.feet.y,this.feet.z);}
+ placeFeet(x,y,z){const h=this.headPos();this.rig.position.x+=x-h.x;this.rig.position.z+=z-h.z;this.rig.position.y=y+this.lift;}
+ resetLift(){this.rig.position.y-=this.lift;this.lift=0;}
+ init(){const h=this.headPos();this.feet.set(h.x,this.rig.position.y-this.lift,h.z);const f=this.body.floor(this.feet);if(f!==null)this.feet.y=f;this.body.resolve(this.feet);this.placeFeet(this.feet.x,this.feet.y,this.feet.z);}
  update(dt,sources){if(!this.enabled)return;dt=Math.min(dt,0.05);const h=this.headPos();
-  const p=this.feet.set(h.x,this.rig.position.y,h.z);const d=new THREE.Vector3();
+  const p=this.feet.set(h.x,this.rig.position.y-this.lift,h.z);const d=new THREE.Vector3();
   for(const s of sources){const g=s.gamepad;if(!g||s.hand)continue;const [x,y]=stick(g);
    if(s.handedness==='left'){if(x||y){const q=new THREE.Quaternion();this.camera.getWorldQuaternion(q);const fw=new THREE.Vector3(0,0,-1).applyQuaternion(q);fw.y=0;
      if(fw.lengthSq()<1e-4)fw.set(0,1,0).applyQuaternion(q).negate().setY(0);fw.normalize();const rt=new THREE.Vector3(-fw.z,0,fw.x);
      d.addScaledVector(fw,-y*this.speed*dt).addScaledVector(rt,x*this.speed*dt);}}
-   else if(s.handedness==='right'){const k='right';if(Math.abs(x)>0.6&&this.turnArmed[k]){this.turnArmed[k]=false;this.turn(-Math.sign(x)*this.snap);}else if(Math.abs(x)<0.3)this.turnArmed[k]=true;}}
+   else if(s.handedness==='right'){const k='right';if(Math.abs(x)>0.6&&this.turnArmed[k]){this.turnArmed[k]=false;this.turn(-Math.sign(x)*this.snap);}else if(Math.abs(x)<0.3)this.turnArmed[k]=true;
+    // vertical: right stick up/down (only when mostly vertical, so snap-turn stays on left/right); stick click = reset height
+    if(Math.abs(y)>0.25&&Math.abs(y)>Math.abs(x)*1.5)this.lift=THREE.MathUtils.clamp(this.lift-y*this.vspeed*dt,this.liftMin,this.liftMax);
+    const b3=g.buttons[3];if(b3&&b3.pressed&&!this._b3)this.lift=0;this._b3=!!(b3&&b3.pressed);}}
   const before=p.clone();this.body.move(p,d); // includes push-out when the user physically walks into a wall
-  this.rig.position.x+=p.x-before.x;this.rig.position.z+=p.z-before.z;this.rig.position.y=p.y;}
+  this.rig.position.x+=p.x-before.x;this.rig.position.z+=p.z-before.z;this.rig.position.y=p.y+this.lift;}
  turn(a){const h=this.headPos().clone();this.rig.position.sub(h).applyAxisAngle(new THREE.Vector3(0,1,0),a).add(h);this.rig.rotation.y+=a;this.rig.updateMatrixWorld(true);}
  // teleport arc from an Object3D (controller)
  updateArc(ctrl){const o=new THREE.Vector3().setFromMatrixPosition(ctrl.matrixWorld);const dir=new THREE.Vector3(0,0,-1).transformDirection(ctrl.matrixWorld);

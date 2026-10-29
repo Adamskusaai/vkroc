@@ -9,6 +9,10 @@ body{margin:0;overflow:hidden;font-family:system-ui,sans-serif;background:#000}
 #VRButton{font-size:28px!important;padding:22px 44px!important;bottom:24px!important;border-radius:16px!important;background:#1e6fd9!important;opacity:1!important;border:0!important;width:auto!important;white-space:nowrap!important;left:50%!important;transform:translateX(-50%)}
 #status{position:absolute;right:12px;bottom:12px;color:#fff;background:#000a;padding:8px 12px;border-radius:10px;z-index:5}
 #qbtn,#qsheet{display:none}
+#vbar{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;gap:6px}
+#vbar button{width:34px;height:34px;border-radius:50%;border:1px solid #ffffff33;background:#0B0B0B80;color:#fff;font:600 15px/1 system-ui,sans-serif;padding:0;touch-action:none;user-select:none;-webkit-user-select:none}
+#vbar #vr0{display:none;font-size:13px}#vbar.lifted #vr0{display:block}
+#arbtn{position:absolute;right:12px;top:12px;z-index:9;font-size:18px;padding:10px 14px;border:0;border-radius:10px;background:#E2552D;color:#fff}
 @media (max-width:800px),(pointer:coarse){
 body{font-family:Archivo,"Helvetica Neue",system-ui,-apple-system,sans-serif}
 #ui{top:auto;bottom:0;padding:8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));flex-wrap:nowrap;overflow-x:auto;gap:6px;pointer-events:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:linear-gradient(transparent,#0008)}
@@ -23,6 +27,8 @@ body{font-family:Archivo,"Helvetica Neue",system-ui,-apple-system,sans-serif}
 #qsheet.open{display:block;position:absolute;z-index:6;left:calc(10px + env(safe-area-inset-left));right:calc(10px + env(safe-area-inset-right));top:calc(54px + env(safe-area-inset-top));background:#0B0B0Be6;color:#fff;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5}
 #qsheet b{color:#E2552D}
 #VRButton{font-size:15px!important;padding:10px 18px!important;bottom:calc(64px + env(safe-area-inset-bottom))!important;border-radius:999px!important}
+#vbar{right:calc(8px + env(safe-area-inset-right));gap:5px}#vbar button{width:30px;height:30px;font-size:13px;background:#0B0B0B66}
+#arbtn{right:auto;left:calc(10px + env(safe-area-inset-left));top:calc(10px + env(safe-area-inset-top));font:600 13px/1 inherit;padding:9px 13px;border-radius:999px}
 }
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.1/build/index.module.js"}}</script>
@@ -33,10 +39,11 @@ body{font-family:Archivo,"Helvetica Neue",system-ui,-apple-system,sans-serif}
 👉 <b>Teleport:</b> zamier ovládačom (alebo prstom) na podlahu a stlač spúšť (alebo spoj palec s ukazovákom).<br>
 🏠 <b>Model domu (dollhouse):</b> tlačidlo B na pravom ovládači alebo „Model domu“ – dom sa zmenší pred vami, otáčate pravou páčkou alebo uchopením (grip). Znova B = späť dnu.<br>
 📋 <b>Menu miest:</b> tlačidlo Y alebo zamier na modré tlačidlo MENU na ľavej ruke.<br>
-🏠 <b>Domov:</b> v menu „Domov“ vráti na vstup. Páčky: chôdza / otočenie.</div>
+🏠 <b>Domov:</b> v menu „Domov“ vráti na vstup. Páčky: ľavá chôdza, pravá vľavo/vpravo otočenie, <b>pravá hore/dole = výška</b> (klik páčkou = reset).<br>⌨️ Počítač: <b>E</b> hore, <b>Q</b> dole, <b>R</b> reset výšky.<br>🥽 <b>Realita (AR)</b> na Quest: dom v skutočnom priestore – zamier na podlahu a stlač spúšť.</div>
+<div id="vbar"><button id="vup" aria-label="Hore" title="Hore (E)">▲</button><button id="vr0" aria-label="Reset výšky" title="Reset výšky (R)">⟲</button><button id="vdn" aria-label="Dole" title="Dole (Q)">▼</button></div>
 <div id="status">Načítavam…</div>
 <button id="qbtn" aria-label="Ovládanie">?</button>
-<div id="qsheet"><b>Ovládanie</b><br>☝️ Ťahaj prstom – rozhliadni sa<br>👆 Ťukni na podlahu – presuň sa tam<br>🤏 Dvoma prstami – priblíženie (zorný uhol)<br>⬇️ Miestnosti vyber dole · 🏠 vstup · 🧊 model domu<br>🥽 VR: otvor stránku v Meta Quest</div>
+<div id="qsheet"><b>Ovládanie</b><br>☝️ Ťahaj prstom – rozhliadni sa<br>👆 Ťukni na podlahu – presuň sa tam<br>🤏 Dvoma prstami – priblíženie (zorný uhol)<br>⬇️ Miestnosti vyber dole · 🏠 vstup · 🧊 model domu<br>↕ ▲▼ vpravo – výška pohľadu<br>🥽 VR: otvor stránku v Meta Quest</div>
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -48,7 +55,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
 import {XRHandModelFactory} from 'three/addons/webxr/XRHandModelFactory.js';
-import {Dollhouse,Body,Locomotion,loadCollider,colliderFromObject} from './vrmove4.js?v=1';
+import {Dollhouse,Body,Locomotion,loadCollider,colliderFromObject} from './vrmove4.js?v=2';
 const P=new URLSearchParams(location.search);const REAL=P.get('real')==='1';
 const MODEL=P.get('model')||'house_photoreal.glb', ALT=P.get('alt');
 const HDR=P.get('hdri')||'meadow_2_1k.hdr';
@@ -61,7 +68,7 @@ if(P.get('spots')==='stano')SPOTS.splice(0,SPOTS.length,['Pred domom',21.5,2.6,-
 if(P.get('spots')==='byt3i')SPOTS.splice(0,SPOTS.length,['Vstup',4.4,0.7,0,180],['Ob\u00fdva\u010dka',8.7,7.0,0,75],['Kuchy\u0148a',8.2,4.9,0,0],['Sp\u00e1l\u0148a',2.9,4.6,0,135],['Detsk\u00e1 izba',2.8,2.9,0,45],['K\u00fape\u013e\u0148a',5.6,1.7,0,-60],['WC',5.5,3.7,0,0],['Lod\u017eia',6.5,8.6,0,170]);
 const HOME=(P.get('spots')==='byt3i')?0:2;
 let spotIdx=parseInt(P.get('start')||'2');
-const status=document.getElementById('status');
+const status=document.getElementById('status');let AR=null;
 const MOB=matchMedia('(max-width:800px),(pointer:coarse)').matches;
 {let ft;new MutationObserver(()=>{if(!MOB)return;status.classList.remove('fade');clearTimeout(ft);if(!/Načítavam/.test(status.textContent))ft=setTimeout(()=>status.classList.add('fade'),3000);}).observe(status,{childList:true,characterData:true,subtree:true});}
 {const qb=document.getElementById('qbtn'),qs=document.getElementById('qsheet');qb.onclick=()=>qs.classList.toggle('open');qs.onclick=()=>qs.classList.remove('open');}
@@ -117,7 +124,7 @@ let done=0;const need=ALT?2:1;
  x=>{if(x.total)status.textContent='Načítavam '+Math.round(100*x.loaded/x.total)+' %';},e=>{status.textContent='Chyba: '+e.message;window.__error=String(e);}));
 const gp=new THREE.Mesh(new THREE.PlaneGeometry(400,400).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({visible:false}));gp.position.y=-0.05;scene.add(gp);floorTargets.push(gp);
 // spots
-function goSpot(i){if(window.__dh&&window.__dh.on)toggleDH();spotIdx=i;const [,x,z,y,yaw]=SPOTS[i];let r=THREE.MathUtils.degToRad(yaw);
+function goSpot(i){if(AR){spotIdx=i;arGoSpot(i);buildUI();return;}if(window.__dh&&window.__dh.on)toggleDH();spotIdx=i;dLift=0;vbarUpd();if(loco)loco.lift=0;const [,x,z,y,yaw]=SPOTS[i];let r=THREE.MathUtils.degToRad(yaw);
  if(renderer.xr.isPresenting){rig.position.set(x,y,z);rig.rotation.y=r;rig.updateMatrixWorld(true);if(loco)loco.init();}
  else{rig.position.set(0,0,0);rig.rotation.y=0;let px=x,pz=z;
   if(MOB){const o=new THREE.Vector3(x,y+1.2,z),rc=new THREE.Raycaster();rc.far=6;const objs=models.filter(Boolean);
@@ -130,8 +137,8 @@ function goSpot(i){if(window.__dh&&window.__dh.on)toggleDH();spotIdx=i;const [,x
  buildUI();}
 window.goSpot=goSpot;window.setVar=setVar;
 if(P.get('cam')){/* preview override */}
-renderer.xr.addEventListener('sessionstart',()=>{if(REAL){rf=0;return;}goSpot(spotIdx);showPanel(true);setTimeout(()=>{if(loco)loco.init();},300);});
-renderer.xr.addEventListener('sessionend',()=>goSpot(spotIdx));
+renderer.xr.addEventListener('sessionstart',()=>{if(AR)return;if(REAL){rf=0;return;}goSpot(spotIdx);showPanel(true);setTimeout(()=>{if(loco)loco.init();},300);});
+renderer.xr.addEventListener('sessionend',()=>setTimeout(()=>goSpot(spotIdx),0));
 // 2D UI
 const ui=document.getElementById('ui');
 function buildUI(){ui.innerHTML='';SPOTS.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s[0];if(i===spotIdx)b.className='on';b.onclick=()=>goSpot(i);ui.appendChild(b);});
@@ -143,7 +150,7 @@ function buildUI(){ui.innerHTML='';SPOTS.forEach((s,i)=>{const b=document.create
 const cv=document.createElement('canvas');cv.width=1024;cv.height=1024;const cx=cv.getContext('2d');const ptex=new THREE.CanvasTexture(cv);ptex.colorSpace=THREE.SRGBColorSpace;
 const panel=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.8),new THREE.MeshBasicMaterial({map:ptex,transparent:true,depthTest:false}));panel.renderOrder=10;panel.visible=false;scene.add(panel);
 let ITEMS=[];
-function drawPanel(){ITEMS=[...SPOTS.map((s,i)=>({t:s[0],a:()=>goSpot(i),on:i===spotIdx})),{t:'🏠 Domov',a:()=>goSpot(HOME)},{t:(window.__dh&&window.__dh.on)?'↩ Späť dnu':'🏠 Model domu',a:()=>toggleDH()}];
+function drawPanel(){ITEMS=[...SPOTS.map((s,i)=>({t:s[0],a:()=>goSpot(i),on:i===spotIdx})),{t:'🏠 Domov',a:()=>goSpot(HOME)},AR?{t:'📍 Umiestniť znova',a:()=>arStartPlacing()}:{t:(window.__dh&&window.__dh.on)?'↩ Späť dnu':'🏠 Model domu',a:()=>toggleDH()},{t:'↕ Reset výšky',a:()=>resetLift()}];
  if(ALT)ITEMS.push({t:'⇄ '+NAMES[1-cur],a:()=>setVar(1-cur)});ITEMS.push({t:'✖ Zavrieť menu',a:()=>showPanel(false)});
  cx.clearRect(0,0,1024,1024);cx.fillStyle='#101418e8';cx.beginPath();cx.roundRect(0,0,1024,1024,40);cx.fill();
  cx.fillStyle='#fff';cx.font='bold 46px sans-serif';cx.fillText('Kam chceš ísť?',40,70);
@@ -173,6 +180,7 @@ function hitUI(c){aim(c);const objs=[...menuBtns];if(panel.visible)objs.push(pan
 function act(c){const h=hitUI(c);
  if(h){if(h.object.userData.menu){showPanel(!panel.visible);return;}
   const u=h.uv;const px=u.x*1024,py=(1-u.y)*1024;const it=ITEMS.find(it=>px>it.x&&px<it.x+it.w&&py>it.y&&py<it.y+it.h);if(it){it.a();if(!/Zavrieť/.test(it.t))showPanel(false);}return;}
+ if(AR){if(AR.placing&&AR.cand)arPlace(AR.cand,AR.spot);return;}
  if(loco&&!REAL&&!DH.on)loco.doTeleport();}
 function visible(o){while(o){if(!o.visible)return false;o=o.parent;}return true;}
 const clock=new THREE.Clock();
@@ -203,20 +211,32 @@ function realTick(dt){if(!renderer.xr.isPresenting)return;rf++;
    if(rMode&&(x||y)){const v=rt.clone().multiplyScalar(x).addScaledVector(fw,-y).multiplyScalar(0.3*dt);rcal.dx+=v.x;rcal.dz+=v.z;rApply();}
    else if(!rMode&&rStick&&(x||y)){const v=rt.clone().multiplyScalar(x).addScaledVector(fw,-y).multiplyScalar(1.4*dt);rig.position.add(v);}}
  }}
+// ---- vertical movement (desktop E/Q, mobile ▲▼, VR right stick up/down) ----
+let dLift=0;const vkeys={up:0,dn:0};const vbar=document.getElementById('vbar');
+function vbarUpd(){vbar.classList.toggle('lifted',Math.abs(dLift)>0.01||!!(loco&&Math.abs(loco.lift)>0.01));}
+function resetLift(){if(renderer.xr.isPresenting){if(AR){AR.dy=0;arApply();}else if(loco)loco.lift=0;return;}if(DH.on)return;camera.position.y-=dLift;orbit.target.y-=dLift;dLift=0;orbit.update();vbarUpd();}
+window.resetLift=resetLift;
+function deskLift(dt){const v=vkeys.up-vkeys.dn;if(!v||DH.on)return;const n=THREE.MathUtils.clamp(dLift+v*1.2*Math.min(dt,0.05),-3,12),d=n-dLift;dLift=n;camera.position.y+=d;orbit.target.y+=d;if(orbit.enabled)orbit.update();vbarUpd();}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if(k==='e')vkeys.up=1;else if(k==='q')vkeys.dn=1;else if(k==='r'&&!e.ctrlKey&&!e.metaKey)resetLift();});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='e')vkeys.up=0;else if(k==='q')vkeys.dn=0;});
+addEventListener('blur',()=>{vkeys.up=vkeys.dn=0;});
+for(const [id,key] of [['vup','up'],['vdn','dn']]){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();vkeys[key]=1;try{b.setPointerCapture(e.pointerId);}catch(er){}});for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{vkeys[key]=0;});b.addEventListener('contextmenu',e=>e.preventDefault());}
+document.getElementById('vr0').onclick=resetLift;
+if(P.get('noui'))vbar.style.display='none';
 const DH=new Dollhouse({renderer,world,rig,camera,orbit,center:(P.get('dhc')||(P.get('spots')==='real'?'4.4,4.0':'4.5,6.5')).split(',').map(Number),scale:parseFloat(P.get('dhs')||'0.06')});
 window.__dh=DH;function toggleDH(){DH.toggle();if(loco){loco.enabled=!DH.on;loco.hideArc();}if(!DH.on&&renderer.xr.isPresenting&&loco)setTimeout(()=>loco.init(),50);showPanel(false);buildUI();}window.toggleDH=toggleDH;
 for(const c of ctrls){c.addEventListener('squeezestart',()=>DH.grabStart(c));c.addEventListener('squeezeend',()=>DH.grabEnd(c));}
 renderer.xr.addEventListener('sessionend',()=>{if(DH.on)toggleDH();});
-renderer.setAnimationLoop(()=>{const dt=clock.getDelta();let arcOn=false;if(REAL&&!DH.on)realTick(dt);if(DH.on)DH.update(dt,renderer.xr.getSession());
+renderer.setAnimationLoop(()=>{const dt=clock.getDelta();let arcOn=false;if(REAL&&!DH.on)realTick(dt);if(AR)arTick(dt);if(DH.on)DH.update(dt,renderer.xr.getSession());if(!renderer.xr.isPresenting)deskLift(dt);
  if(renderer.xr.isPresenting){marker.visible=false;
   for(const c of ctrls){const h=hitUI(c);
    if(panel.visible){let ch=false;ITEMS.forEach(it=>{const hv=!!(h&&h.object===panel&&(()=>{const px=h.uv.x*1024,py=(1-h.uv.y)*1024;return px>it.x&&px<it.x+it.w&&py>it.y&&py<it.y+it.h})());if(hv!==!!it.hover){it.hover=hv;ch=true;}});if(ch)drawPanel();}
-   if(c.userData.sel&&!h&&loco&&!REAL&&!DH.on){arcOn=true;loco.updateArc(c);}
+   if(c.userData.sel&&!h&&loco&&!REAL&&!DH.on&&!AR){arcOn=true;loco.updateArc(c);}
    const s=c.userData.src;const g=s&&s.gamepad;if(!g||c.userData.hand)continue;
-   const b=g.buttons[5];if(b){if(b.pressed&&!c.userData.bp){if(s.handedness==='right')toggleDH();else if(!REAL)showPanel(!panel.visible);}c.userData.bp=b.pressed;}
+   const b=g.buttons[5];if(b){if(b.pressed&&!c.userData.bp){if(s.handedness==='right'){if(!AR)toggleDH();}else if(!REAL)showPanel(!panel.visible);}c.userData.bp=b.pressed;}
   }
   if(!arcOn&&loco)loco.hideArc();
-  if(loco&&!DH.on){const ss=renderer.xr.getSession();if(ss)loco.update(dt,ss.inputSources);}}
+  if(loco&&!DH.on&&!AR){const ss=renderer.xr.getSession();if(ss)loco.update(dt,ss.inputSources);}}
  renderer.render(scene,camera);});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 // preview camera override for screenshots
@@ -228,7 +248,7 @@ if(MOB){orbit.enableZoom=false;orbit.enablePan=false;orbit.rotateSpeed=-0.35;orb
  el.addEventListener('pointerdown',e=>{t0={x:e.clientX,y:e.clientY,t:performance.now()};});
  el.addEventListener('pointerup',e=>{if(!t0||DH.on)return;const m=Math.hypot(e.clientX-t0.x,e.clientY-t0.y),dt=performance.now()-t0.t;t0=null;if(m>8||dt>350)return;
   const rc=new THREE.Raycaster();rc.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1),camera);const h=rc.intersectObjects(models.filter(Boolean),true).find(h=>h.face&&h.face.normal.clone().transformDirection(h.object.matrixWorld).y>0.7);
-  if(!h||h.distance>12||Math.abs(h.point.y-(camera.position.y-1.6))>0.6)return;const d=new THREE.Vector3(h.point.x-camera.position.x,h.point.y+1.6-camera.position.y,h.point.z-camera.position.z);
+  if(!h||h.distance>12||Math.abs(h.point.y-(camera.position.y-1.6-dLift))>0.6)return;const d=new THREE.Vector3(h.point.x-camera.position.x,h.point.y+1.6+dLift-camera.position.y,h.point.z-camera.position.z);
   const c0=camera.position.clone(),g0=orbit.target.clone(),T=performance.now();(function an(){const k=Math.min(1,(performance.now()-T)/400),e2=k*(2-k);camera.position.copy(c0).addScaledVector(d,e2);orbit.target.copy(g0).addScaledVector(d,e2);if(k<1)requestAnimationFrame(an);})();});
  el.addEventListener('touchstart',e=>{if(e.touches.length===2){t0=null;pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pf=camera.fov;}},{passive:true});
  el.addEventListener('touchmove',e=>{if(e.touches.length===2&&pd){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);camera.fov=THREE.MathUtils.clamp(pf*pd/d,35,95);camera.updateProjectionMatrix();}},{passive:true});
@@ -236,8 +256,51 @@ if(MOB){orbit.enableZoom=false;orbit.enablePan=false;orbit.rotateSpeed=-0.35;orb
  (function dl(){if(!renderer.xr.isPresenting&&orbit.enabled)orbit.update();requestAnimationFrame(dl);})();}
 window.setCam=(px,py,pz,lx,ly,lz,fov)=>{orbit.enabled=false;camera.position.set(px,py,pz);camera.lookAt(lx,ly,lz);if(fov){camera.fov=fov;camera.updateProjectionMatrix();}};
 window.frameDone=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-// ---- optional AR passthrough mode ----
-renderer.setClearAlpha(1);let __bg=null;const AR_HIDE=[];
-function arToggle(on){if(on){__bg=scene.background;scene.background=null;renderer.setClearColor(0x000000,0);AR_HIDE.length=0;scene.traverse(o=>{if(!o.isMesh||!o.visible)return;const n=(o.name||'')+' '+((o.material&&o.material.name)||'');if(/ground|glass|sklo|curtain|window_pane/i.test(n)){o.visible=false;AR_HIDE.push(o);}});}else{if(__bg)scene.background=__bg;renderer.setClearColor(0x000000,1);AR_HIDE.forEach(o=>o.visible=true);AR_HIDE.length=0;}}
-if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-ar').then(ok=>{if(!ok)return;const b=document.createElement('button');const L='AR re\u017eim (passthrough)';b.textContent=L;b.style.cssText='position:absolute;right:12px;top:12px;z-index:9;font-size:18px;padding:10px 14px;border:0;border-radius:10px;background:#fffffff0';
- b.onclick=async()=>{if(renderer.xr.isPresenting){renderer.xr.getSession().end();return;}try{const s=await navigator.xr.requestSession('immersive-ar',{optionalFeatures:['local-floor','hand-tracking']});arToggle(true);s.addEventListener('end',()=>{arToggle(false);b.textContent=L;});await renderer.xr.setSession(s);b.textContent='Ukon\u010di\u0165 AR';}catch(e){arToggle(false);status.textContent='AR nie je dostupn\u00e9: '+e.message;}};document.body.appendChild(b);}).catch(()=>{});</script></body></html>
+// ---- Mixed reality: immersive-ar passthrough on Meta Quest ("Realita (AR)") ----
+// rig stays at identity (camera = real room, local-floor y=0 = real floor); the house (world group) is placed 1:1 into the room.
+const AR_RX=new RegExp(P.get('arhide')||'ground|lawn|grass|terrain|^path$|fence|slat|shrub|hedge|tree|bush|gravel|terrace|terasa|patio|outdoor|sky|sklo|glass|vidro|janela|window_pane|curtain','i');
+const AR_KEEP=/mirror|lamp|globe|picture|shower|black_glass|tv_|vase|bottle/i;
+const AR_HIDE=[];let __bg=null;window.__ar=()=>AR;
+function arScene(on){if(on){__bg=scene.background;scene.background=null;renderer.setClearColor(0x000000,0);AR_HIDE.length=0;
+  world.traverse(o=>{if(!o.isMesh||!o.visible)return;const ms=Array.isArray(o.material)?o.material:[o.material];let names=ms.map(m=>m&&m.name||'');for(let q=o;q&&q!==world;q=q.parent)names.push(q.name||'');
+   if(names.some(n=>AR_RX.test(n))&&!AR_KEEP.test((o.name||'')+' '+ms.map(m=>m&&m.name).join(' '))){o.visible=false;AR_HIDE.push(o);}});
+  window.__arHidden=AR_HIDE.map(o=>o.name);}
+ else{if(__bg)scene.background=__bg;renderer.setClearColor(0x000000,1);AR_HIDE.forEach(o=>o.visible=true);AR_HIDE.length=0;}}
+window.arScene=arScene;
+const arRet=new THREE.Mesh(new THREE.RingGeometry(0.15,0.22,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xE2552D}));arRet.visible=false;scene.add(arRet);
+const arArrow=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.25,16).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xE2552D}));arRet.add(arArrow);arArrow.position.set(0,0.02,-0.35);
+function arHeading(){const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.getWorldQuaternion(new THREE.Quaternion()));return Math.atan2(-f.x,-f.z);}
+function arApply(){const [,sx,sz,sy]=SPOTS[AR.spot];const S=new THREE.Vector3(sx,sy,sz).applyAxisAngle(new THREE.Vector3(0,1,0),AR.yaw);
+ world.scale.setScalar(1);world.rotation.set(0,AR.yaw,0);world.position.set(AR.T.x-S.x,AR.T.y+AR.dy-S.y,AR.T.z-S.z);world.updateMatrixWorld(true);}
+function arPlace(T,spot){AR.spot=spot;AR.T.copy(T);AR.dy=0;AR.yaw=arHeading()-THREE.MathUtils.degToRad(SPOTS[spot][4]);AR.placing=false;arRet.visible=false;world.visible=true;arApply();
+ rSay('Dom umiestnený 1:1. Ľavá páčka = posun, pravá = otočenie,\npravá hore/dole = výška · A = umiestniť znova',7);}
+function arFeet(){const h=new THREE.Vector3();camera.getWorldPosition(h);return new THREE.Vector3(h.x,AR.T.y,h.z);}
+function arStartPlacing(){AR.placing=true;world.visible=false;rSay('Zamier ovládačom na podlahu a stlač spúšť\n(miesto: '+SPOTS[AR.spot][0]+')',8);}
+function arTick(dt){if(!renderer.xr.isPresenting)return;if(rHintT>0){rHintT-=dt;if(rHintT<=0)rHint.visible=false;}
+ const ss=renderer.xr.getSession(),fr=renderer.xr.getFrame(),ref=renderer.xr.getReferenceSpace();if(!ss)return;
+ if(AR.placing){let T=null;const c=ctrls.find(c=>c.userData.src&&c.userData.src.handedness==='right')||ctrls.find(c=>c.userData.src);
+  if(c&&AR.hitOK&&!AR.hitReq&&ss.requestHitTestSource){AR.hitReq=true;ss.requestHitTestSource({space:c.userData.src.targetRaySpace}).then(h=>AR.hit=h).catch(()=>{});}
+  if(AR.hit&&fr&&ref){const r=fr.getHitTestResults(AR.hit)[0];const p=r&&r.getPose(ref);if(p&&p.transform.orientation){const q=p.transform.orientation,up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion(q.x,q.y,q.z,q.w));if(up.y>0.8)T=new THREE.Vector3(p.transform.position.x,p.transform.position.y,p.transform.position.z);}}
+  if(!T&&c){aim(c);const d=ray.ray.direction,o=ray.ray.origin;if(d.y<-0.05){const t=-o.y/d.y;if(t<15)T=o.clone().addScaledVector(d,t);}}
+  if(!T){const h=new THREE.Vector3();camera.getWorldPosition(h);const a=arHeading();T=new THREE.Vector3(h.x-Math.sin(a)*1.5,0,h.z-Math.cos(a)*1.5);}
+  AR.cand=T;arRet.position.copy(T).y+=0.005;arRet.rotation.y=arHeading();arRet.visible=true;}
+ const fw=new THREE.Vector3(-Math.sin(arHeading()),0,-Math.cos(arHeading())),rt=new THREE.Vector3(-fw.z,0,fw.x);let ch=false;
+ for(const src of ss.inputSources){const g=src.gamepad;if(!g||src.hand)continue;const a=g.axes;let x=a.length>=4?a[2]:a[0]||0,y=a.length>=4?a[3]:a[1]||0;if(Math.hypot(x,y)<0.15){x=0;y=0;}
+  const k=src.handedness,e=i=>{const p=!!(g.buttons[i]&&g.buttons[i].pressed),w=AR.prev[k+i];AR.prev[k+i]=p;return p&&!w;};
+  if(k==='right'){if(e(4)&&!AR.placing)arStartPlacing();if(e(3)){AR.dy=0;ch=true;rSay('Výška resetovaná',2);}
+   if(!AR.placing){if(Math.abs(x)>Math.abs(y)&&x){const H=arFeet(),d=-x*0.6*dt;AR.T.sub(H).applyAxisAngle(new THREE.Vector3(0,1,0),d).add(H);AR.yaw+=d;ch=true;}
+    else if(y){AR.dy=THREE.MathUtils.clamp(AR.dy-y*0.4*dt,-3,3);ch=true;}}}
+  if(k==='left'&&!AR.placing&&(x||y)){AR.T.addScaledVector(rt,x*0.5*dt).addScaledVector(fw,-y*0.5*dt);ch=true;}}
+ if(ch&&!AR.placing)arApply();}
+function arGoSpot(i){if(AR.placing){AR.spot=i;arStartPlacing();return;}arPlace(arFeet(),i);}
+let arBtn=null;
+async function arEnter(){if(renderer.xr.isPresenting){renderer.xr.getSession().end();return;}
+ try{if(DH.on)toggleDH();const s=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['local-floor'],optionalFeatures:['hit-test','hand-tracking']}).catch(()=>navigator.xr.requestSession('immersive-ar',{optionalFeatures:['local-floor','hit-test','hand-tracking']}));
+  AR={placing:true,T:new THREE.Vector3(),yaw:0,dy:0,spot:spotIdx,prev:{},hitOK:!!(s.enabledFeatures?s.enabledFeatures.includes('hit-test'):true),hit:null,hitReq:false};
+  arScene(true);rig.position.set(0,0,0);rig.rotation.set(0,0,0);rig.updateMatrixWorld(true);
+  s.addEventListener('end',()=>{if(AR&&AR.hit)try{AR.hit.cancel();}catch(e){}AR=null;arRet.visible=false;arScene(false);world.visible=true;world.position.set(0,0,0);world.rotation.set(0,0,0);world.scale.setScalar(1);world.updateMatrixWorld(true);if(arBtn)arBtn.textContent='Realita (AR)';buildUI();});
+  await renderer.xr.setSession(s);if(arBtn)arBtn.textContent='Ukončiť AR';arStartPlacing();}
+ catch(e){AR=null;arScene(false);world.visible=true;status.textContent='AR nie je dostupné: '+e.message;}}
+window.arEnter=arEnter;
+if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-ar').then(ok=>{if(!ok&&!P.get('arbtn'))return;arBtn=document.createElement('button');arBtn.id='arbtn';arBtn.textContent='Realita (AR)';arBtn.title='Zmiešaná realita – dom v skutočnom priestore (Meta Quest)';arBtn.onclick=arEnter;document.body.appendChild(arBtn);}).catch(()=>{});
+</script></body></html>
