@@ -233,7 +233,7 @@ if(MOB){orbit.enableZoom=false;orbit.enablePan=false;orbit.rotateSpeed=-0.35;orb
  el.addEventListener('touchstart',e=>{if(e.touches.length===2){t0=null;pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pf=camera.fov;}},{passive:true});
  el.addEventListener('touchmove',e=>{if(e.touches.length===2&&pd){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);camera.fov=THREE.MathUtils.clamp(pf*pd/d,35,95);camera.updateProjectionMatrix();}},{passive:true});
  el.addEventListener('touchend',e=>{if(e.touches.length<2)pd=0;});
- (function dl(){if(!renderer.xr.isPresenting)orbit.update();requestAnimationFrame(dl);})();}
+ (function dl(){if(!renderer.xr.isPresenting&&orbit.enabled)orbit.update();requestAnimationFrame(dl);})();}
 window.setCam=(px,py,pz,lx,ly,lz,fov)=>{orbit.enabled=false;camera.position.set(px,py,pz);camera.lookAt(lx,ly,lz);if(fov){camera.fov=fov;camera.updateProjectionMatrix();}};
 window.frameDone=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 // ---- optional AR passthrough mode ----
