@@ -45,7 +45,7 @@ body{font-family:Archivo,"Helvetica Neue",system-ui,-apple-system,sans-serif}
 👉 <b>Teleport:</b> zamier ovládačom (alebo prstom) na podlahu a stlač spúšť (alebo spoj palec s ukazovákom).<br>
 🔄 <b>Model (prehliadač):</b> tlačidlo „Model“ – otáčanie myšou, koliesko = zoom, pravé tlačidlo = posun, pohľady Zhora / Z boku / Spredu; „Chôdza“ = späť dnu.<br>🏠 <b>Model domu (dollhouse, VR):</b> tlačidlo B na pravom ovládači alebo „Model domu“ – dom sa zmenší pred vami, otáčate pravou páčkou alebo uchopením (grip). Znova B = späť dnu.<br>
 📋 <b>Menu miest:</b> tlačidlo Y alebo zamier na modré tlačidlo MENU na ľavej ruke.<br>
-🏠 <b>Domov:</b> v menu „Domov“ vráti na vstup. Páčky: ľavá chôdza, pravá vľavo/vpravo otočenie, <b>pravá hore/dole = výška</b> (klik páčkou = reset).<br>⌨️ Počítač: <b>E</b> hore, <b>Q</b> dole, <b>R</b> reset výšky.<br>🥽 <b>Realita (AR)</b> na Quest: dom v skutočnom priestore – zamier na podlahu a stlač spúšť.</div>
+🏠 <b>Domov:</b> v menu „Domov“ vráti na vstup. Páčky: ľavá chôdza, pravá vľavo/vpravo otočenie, <b>pravá hore/dole = výška</b> (klik páčkou = reset).<br>⌨️ Počítač: <b>E</b> hore, <b>Q</b> dole, <b>R</b> reset výšky.<span class="arhelp" style="display:none"><br>🥽 <b>Realita (AR)</b> na Quest: dom v skutočnom priestore – zamier na podlahu a stlač spúšť.</span></div>
 <div id="vbar"><button id="vup" aria-label="Hore" title="Hore (E)">▲</button><button id="vr0" aria-label="Reset výšky" title="Reset výšky (R)">⟲</button><button id="vdn" aria-label="Dole" title="Dole (Q)">▼</button></div>
 <div id="mvbar"><button data-v="top">⬒ Zhora</button><button data-v="side">◧ Z boku</button><button data-v="front">▣ Spredu</button><button data-v="iso">◩ 3D</button></div>
 <div id="status">Načítavam…</div>
@@ -62,7 +62,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
 import {XRHandModelFactory} from 'three/addons/webxr/XRHandModelFactory.js';
-import {Dollhouse,Body,Locomotion,loadCollider,colliderFromObject,ModelView} from './vrmove4.js?v=4';
+import {Dollhouse,Body,Locomotion,loadCollider,colliderFromObject,ModelView} from './vrmove4.js?v=5';
 const P=new URLSearchParams(location.search);const REAL=P.get('real')==='1';
 const MODEL=P.get('model')||'house_photoreal.glb', ALT=P.get('alt');
 const HDR=P.get('hdri')||'meadow_2_1k.hdr';
@@ -235,9 +235,10 @@ const DH=new Dollhouse({renderer,world,rig,camera,orbit,center:(P.get('dhc')||(P
 let MV=null;
 function mvBox(){const b=new THREE.Box3();if(FP){b.set(new THREE.Vector3(FP[0],0,FP[1]),new THREE.Vector3(FP[2],0,FP[3]));const m=models[cur];if(m){const bb=new THREE.Box3().setFromObject(m);b.max.y=Math.min(bb.max.y,12);b.min.y=Math.max(bb.min.y,-1);}else b.max.y=3;return b;}
  const m=models[cur];if(m)b.setFromObject(m);const s=b.getSize(new THREE.Vector3());if(!isFinite(s.x)||s.x>60||s.z>60){const c=new THREE.Vector3(...(P.get('dhc')||'4.5,6.5').split(',').map(Number),0);b.set(new THREE.Vector3(c.x-6,0,c.y-6),new THREE.Vector3(c.x+6,6,c.y+6));}return b;}
+let MVH=[];function mvHide(on){if(!on){MVH.forEach(o=>o.visible=true);MVH=[];return;}const m=models[cur];if(!m||!FP)return;const bx=new THREE.Box3(),c=new THREE.Vector3();m.traverse(o=>{if(!o.isMesh||!o.visible)return;bx.setFromObject(o);bx.getCenter(c);if(c.x<FP[0]-0.6||c.x>FP[2]+0.6||c.z<FP[1]-0.6||c.z>FP[3]+0.6){o.visible=false;MVH.push(o);}});}
 function setMV(on,quiet){if(renderer.xr.isPresenting)return;if(!MV)MV=new ModelView({camera,orbit,getBox:mvBox});window.__mv=MV;
- if(on){if(DH.on)toggleDH();vkeys.up=vkeys.dn=0;MV.enter();{const bb=mvBox();renderer.clippingPlanes=[new THREE.Plane(new THREE.Vector3(0,-1,0),Math.min(2.45,bb.max.y-0.15))];}document.body.classList.add('mv');document.getElementById('mvbar').classList.add('on');}
- else{MV.exit();renderer.clippingPlanes=[];document.body.classList.remove('mv');document.getElementById('mvbar').classList.remove('on');}
+ if(on){if(DH.on)toggleDH();vkeys.up=vkeys.dn=0;MV.enter();mvHide(true);{const bb=mvBox();renderer.clippingPlanes=[new THREE.Plane(new THREE.Vector3(0,-1,0),Math.min(2.45,bb.max.y-0.15))];}document.body.classList.add('mv');document.getElementById('mvbar').classList.add('on');}
+ else{MV.exit();mvHide(false);renderer.clippingPlanes=[];document.body.classList.remove('mv');document.getElementById('mvbar').classList.remove('on');}
  if(!quiet)buildUI();}
 window.setMV=setMV;window.mvView=k=>MV&&MV.on&&MV.view(k);
 document.querySelectorAll('#mvbar button').forEach(b=>b.onclick=()=>window.mvView(b.dataset.v));
@@ -321,5 +322,5 @@ async function arEnter(){if(renderer.xr.isPresenting){renderer.xr.getSession().e
   await renderer.xr.setSession(s);if(arBtn)arBtn.textContent='Ukončiť AR';arStartPlacing();}
  catch(e){AR=null;arScene(false);world.visible=true;status.textContent='AR nie je dostupné: '+e.message;}}
 window.arEnter=arEnter;
-if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-ar').then(ok=>{if(!ok&&!P.get('arbtn'))return;arBtn=document.createElement('button');arBtn.id='arbtn';arBtn.textContent='Realita (AR)';arBtn.title='Zmiešaná realita – dom v skutočnom priestore (Meta Quest)';arBtn.onclick=arEnter;document.body.appendChild(arBtn);}).catch(()=>{});
+if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-ar').then(ok=>{if(P.get('ar')!=='1')return;document.querySelectorAll('.arhelp').forEach(e=>e.style.display='');if(!ok&&!P.get('arbtn'))return;arBtn=document.createElement('button');arBtn.id='arbtn';arBtn.textContent='Realita (AR)';arBtn.title='Zmiešaná realita – dom v skutočnom priestore (Meta Quest)';arBtn.onclick=arEnter;document.body.appendChild(arBtn);}).catch(()=>{});
 </script></body></html>

@@ -124,8 +124,8 @@ export class ModelView{
  exit(){if(!this.on)return;const o=this.orbit,c=this.camera,S=this.saved;this.on=false;this.anim=null;
   c.position.copy(S.cp);o.target.copy(S.ot);c.fov=S.fov;c.updateProjectionMatrix();o.enableZoom=S.z;o.enablePan=S.p;o.rotateSpeed=S.rs;o.minDistance=S.mi;o.maxDistance=S.ma;o.maxPolarAngle=S.mp;o.enableDamping=S.d;if(S.t)o.touches=S.t;o.update();}
  view(k,anim=true){const C=this.ctr,R=this.R,f=this.camera.fov*Math.PI/360,asp=Math.max(0.45,Math.min(1,this.camera.aspect)),D=R/Math.tan(f)/asp*1.05;
-  const dir={iso:[0.75,0.65,1],top:[0,1,0.002],side:[1,0.18,0],front:[0,0.18,1]}[k]||[0,0.5,1];const v=new THREE.Vector3(...dir).normalize();
-  const to=C.clone().addScaledVector(v,D),tt=C.clone();if(!anim){this.camera.position.copy(to);this.orbit.target.copy(tt);this.orbit.update();return;}
+  const dir={iso:[0.75,0.65,1],top:[0,1,0.002],side:[1,0.3,0.12],front:[0,0.18,1]}[k]||[0,0.5,1];const v=new THREE.Vector3(...dir).normalize();
+  const to=C.clone().addScaledVector(v,D*(k==='side'?1.4:1)),tt=C.clone();if(!anim){this.camera.position.copy(to);this.orbit.target.copy(tt);this.orbit.update();return;}
   const c0=this.camera.position.clone(),t0=this.orbit.target.clone(),T=performance.now();this.anim=()=>{const q=Math.min(1,(performance.now()-T)/600),e=q*q*(3-2*q);this.camera.position.lerpVectors(c0,to,e);this.orbit.target.lerpVectors(t0,tt,e);this.orbit.update();if(q>=1)this.anim=null;};}
  update(){if(this.anim)this.anim();else if(this.on)this.orbit.update();}
 }
