@@ -63,7 +63,7 @@ import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
 import {XRHandModelFactory} from 'three/addons/webxr/XRHandModelFactory.js';
 import {Dollhouse,Body,Locomotion,loadCollider,colliderFromObject,ModelView} from './vrmove4.js?v=5';
-const P=new URLSearchParams(location.search);const REAL=P.get('real')==='1';
+const P=new URLSearchParams(location.search);if(P.get('model')==='futur.glb'){P.set('model','futur2.glb');if(P.get('lm')==='lm/')P.set('lm','lm2/');history.replaceState(null,'','?'+P.toString()+location.hash);}const REAL=P.get('real')==='1';
 const MODEL=P.get('model')||'house_photoreal.glb', ALT=P.get('alt');
 const HDR=P.get('hdri')||'meadow_2_1k.hdr';
 const F2=2.96;
