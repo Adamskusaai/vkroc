@@ -111,3 +111,21 @@ export class Dollhouse{
    if(s.handedness==='left'&&y){this.scale=THREE.MathUtils.clamp(this.scale*(1-y*0.8*dt),0.02,0.2);ch=true;}}
   if(ch)this.apply();}
 }
+
+// --- model view (desktop/mobile only, not in XR): orbit the full-size house from outside ---
+export class ModelView{
+ constructor({camera,orbit,getBox}){Object.assign(this,{camera,orbit,getBox});this.on=false;this.saved=null;this.anim=null;}
+ enter(){if(this.on)return;const o=this.orbit,c=this.camera;
+  this.saved={cp:c.position.clone(),ot:o.target.clone(),fov:c.fov,z:o.enableZoom,p:o.enablePan,rs:o.rotateSpeed,mi:o.minDistance,ma:o.maxDistance,mp:o.maxPolarAngle,d:o.enableDamping,t:o.touches&&{...o.touches}};
+  const b=this.getBox();this.box=b;this.ctr=b.getCenter(new THREE.Vector3());const s=b.getSize(new THREE.Vector3());this.R=Math.max(s.x,s.z,s.y)*0.5+0.5;
+  o.enabled=true;o.enableZoom=true;o.enablePan=true;o.rotateSpeed=0.8;o.enableDamping=true;o.dampingFactor=0.1;o.minDistance=this.R*0.6;o.maxDistance=this.R*6;o.maxPolarAngle=Math.PI*0.495;o.screenSpacePanning=true;
+  if(o.touches)o.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
+  c.fov=Math.min(Math.max(this.saved.fov,40),60);c.updateProjectionMatrix();this.on=true;this.view('iso',false);}
+ exit(){if(!this.on)return;const o=this.orbit,c=this.camera,S=this.saved;this.on=false;this.anim=null;
+  c.position.copy(S.cp);o.target.copy(S.ot);c.fov=S.fov;c.updateProjectionMatrix();o.enableZoom=S.z;o.enablePan=S.p;o.rotateSpeed=S.rs;o.minDistance=S.mi;o.maxDistance=S.ma;o.maxPolarAngle=S.mp;o.enableDamping=S.d;if(S.t)o.touches=S.t;o.update();}
+ view(k,anim=true){const C=this.ctr,R=this.R,f=this.camera.fov*Math.PI/360,asp=Math.max(0.45,Math.min(1,this.camera.aspect)),D=R/Math.tan(f)/asp*1.05;
+  const dir={iso:[0.75,0.65,1],top:[0,1,0.002],side:[1,0.18,0],front:[0,0.18,1]}[k]||[0,0.5,1];const v=new THREE.Vector3(...dir).normalize();
+  const to=C.clone().addScaledVector(v,D),tt=C.clone();if(!anim){this.camera.position.copy(to);this.orbit.target.copy(tt);this.orbit.update();return;}
+  const c0=this.camera.position.clone(),t0=this.orbit.target.clone(),T=performance.now();this.anim=()=>{const q=Math.min(1,(performance.now()-T)/600),e=q*q*(3-2*q);this.camera.position.lerpVectors(c0,to,e);this.orbit.target.lerpVectors(t0,tt,e);this.orbit.update();if(q>=1)this.anim=null;};}
+ update(){if(this.anim)this.anim();else if(this.on)this.orbit.update();}
+}

@@ -28,7 +28,7 @@ a{color:inherit}img{max-width:100%}.wrap{max-width:1160px;margin:0 auto;padding:
 .nav.open{opacity:1;visibility:visible;transform:none}.nav a{font-size:20px;padding:16px 0;border-bottom:1px solid #eee}
 .nav a:not(.cta):after{left:0;right:auto;width:28px;bottom:10px}.nav a.cta{margin:20px 0 0;text-align:center}}
 /* blocks */
-.hero{position:relative;min-height:min(86vh,780px);display:flex;align-items:flex-end;color:#fff;background:#111 url(../img/exterior_front.jpg) center/cover}
+.hero{position:relative;min-height:min(86vh,780px);display:flex;align-items:flex-end;color:#fff;background:#111 url(../img/bung_ext_corner_sw.jpg) center/cover}
 .hero:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.75))}
 .hero .wrap{position:relative;padding-bottom:72px;width:100%}
 .hero p{font-size:20px;max-width:620px;margin:0 0 28px;color:#eee}
