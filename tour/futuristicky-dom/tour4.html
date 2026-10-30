@@ -238,7 +238,7 @@ function mvBox(){const b=new THREE.Box3();if(FP){b.set(new THREE.Vector3(FP[0],0
  const m=models[cur];if(m)b.setFromObject(m);const s=b.getSize(new THREE.Vector3());if(!isFinite(s.x)||s.x>60||s.z>60){const c=new THREE.Vector3(...(P.get('dhc')||'4.5,6.5').split(',').map(Number),0);b.set(new THREE.Vector3(c.x-6,0,c.y-6),new THREE.Vector3(c.x+6,6,c.y+6));}return b;}
 let MVH=[];function mvHide(on){if(!on){MVH.forEach(o=>o.visible=true);MVH=[];return;}const m=models[cur];if(!m||!FP||P.get('spots')==='futur')return;const bx=new THREE.Box3(),c=new THREE.Vector3();m.traverse(o=>{if(!o.isMesh||!o.visible)return;bx.setFromObject(o);bx.getCenter(c);if(c.x<FP[0]-0.6||c.x>FP[2]+0.6||c.z<FP[1]-0.6||c.z>FP[3]+0.6){o.visible=false;MVH.push(o);}});}
 function setMV(on,quiet){if(renderer.xr.isPresenting)return;if(!MV)MV=new ModelView({camera,orbit,getBox:mvBox});window.__mv=MV;
- if(on){if(DH.on)toggleDH();vkeys.up=vkeys.dn=0;MV.enter();mvHide(true);{const bb=mvBox();renderer.clippingPlanes=[new THREE.Plane(new THREE.Vector3(0,-1,0),Math.min(2.45,bb.max.y-0.15))];}document.body.classList.add('mv');document.getElementById('mvbar').classList.add('on');}
+ if(on){if(DH.on)toggleDH();vkeys.up=vkeys.dn=0;MV.enter();mvHide(true);if(P.get('spots')!=='futur'){const bb=mvBox();renderer.clippingPlanes=[new THREE.Plane(new THREE.Vector3(0,-1,0),Math.min(2.45,bb.max.y-0.15))];}document.body.classList.add('mv');document.getElementById('mvbar').classList.add('on');}
  else{MV.exit();mvHide(false);renderer.clippingPlanes=[];document.body.classList.remove('mv');document.getElementById('mvbar').classList.remove('on');}
  if(!quiet)buildUI();}
 window.setMV=setMV;window.mvView=k=>MV&&MV.on&&MV.view(k);
