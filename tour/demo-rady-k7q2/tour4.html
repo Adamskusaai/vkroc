@@ -63,7 +63,7 @@ import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
 import {XRHandModelFactory} from 'three/addons/webxr/XRHandModelFactory.js';
 import {Dollhouse,Body,Locomotion,loadCollider,colliderFromObject,ModelView} from './vrmove4.js?v=5';
-const P=new URLSearchParams(location.search);const REAL=P.get('real')==='1';
+const P=new URLSearchParams(location.search);if(P.get('spots')==='rady'&&(!P.get('model')||/^rady1[0-8]\.glb$/.test(P.get('model')))){P.set('model','rady19.glb');history.replaceState(null,'','?'+P.toString()+location.hash);}const REAL=P.get('real')==='1';
 const MODEL=P.get('model')||'house_photoreal.glb', ALT=P.get('alt');
 const HDR=P.get('hdri')||'meadow_2_1k.hdr';
 const F2=2.96;
@@ -73,7 +73,7 @@ const SPOTS=[['🏡 Pred domom',5.75,13.5,0,0],['🌳 Záhrada',-6.0,10.0,0,-53]
 if(P.get('spots')==='real')SPOTS.splice(0,SPOTS.length,['Pred domom',5.0,13.0,0,0],['Z\u00e1hrada',13.0,9.0,0,60],['Ob\u00fdva\u010dka',6.6,4.35,0,90],['Kuchy\u0148a',3.0,4.95,0,90],['K\u00fape\u013e\u0148a 1.06',1.45,2.95,0,0],['Izba 2.02',3.3,5.6,F2,90],['Izba 2.04',5.45,5.85,F2,-90],['Izba 2.05',5.3,2.95,F2,-45]);
 if(P.get('spots')==='stano')SPOTS.splice(0,SPOTS.length,['Pred domom',21.5,2.6,-0.31,90],['Vstup',9.9,2.55,0,90],['Ob\u00fdva\u010dka',5.5,4.2,0,-120],['Kuchy\u0148a',3.0,4.95,0,90],['K\u00fape\u013e\u0148a 1.06',1.6,3.3,0,0],['Izba 2.02',3.3,5.6,F2,90],['Izba 2.04',5.45,5.85,F2,-90],['Izba 2.05',5.3,2.95,F2,-45],['\u0160atn\u00edk 2.03',6.1,7.5,F2,-90],['K\u00fape\u013e\u0148a 2.07',1.6,3.3,F2,0]);
 if(P.get('spots')==='byt3i')SPOTS.splice(0,SPOTS.length,['Vstup',4.4,0.7,0,180],['Ob\u00fdva\u010dka',8.7,7.0,0,75],['Kuchy\u0148a',8.2,4.9,0,0],['Sp\u00e1l\u0148a',2.9,4.6,0,135],['Detsk\u00e1 izba',2.8,2.9,0,45],['K\u00fape\u013e\u0148a',5.6,1.7,0,-60],['WC',5.5,3.7,0,0],['Lod\u017eia',6.5,8.6,0,170]);
-if(P.get('spots')==='rady')SPOTS.splice(0,SPOTS.length,...[["\ud83d\udee3 Ulica", 4, 0, 0, -90], ["Dom 1", 2.65, -15.6, 0, 180], ["Dom 2", 9.15, -15.6, 0, 180], ["Dom 3", 15.65, -15.6, 0, 180], ["Dom 4", 22.15, -15.6, 0, 180], ["Dom 5", 28.65, -15.6, 0, 180], ["Dom 6", 35.15, -15.6, 0, 180], ["Dom 7", 41.65, -15.6, 0, 180], ["Dom 8", 48.15, -15.6, 0, 180], ["Dom 9", 54.65, -15.6, 0, 180], ["Dom 10", 2.65, 15.6, 0, 0], ["Dom 11", 9.15, 15.6, 0, 0], ["Dom 12", 15.65, 15.6, 0, 0], ["Dom 13", 22.15, 15.6, 0, 0], ["Dom 14", 28.65, 15.6, 0, 0], ["Dom 15", 35.15, 15.6, 0, 0], ["Dom 16", 41.65, 15.6, 0, 0], ["Dom 17", 48.15, 15.6, 0, 0], ["Dom 18", 54.65, 15.6, 0, 0]]);
+if(P.get('spots')==='rady')SPOTS.splice(0,SPOTS.length,...[["\ud83d\udee3 Ulica", 4, 0, 0, -90], ["\ud83c\udfe1 Pred domom", 28.6, -3.8, 0.12, 0], ["\ud83d\udeaa Vstup", 27.75, -11.8, 0.45, 15], ["\ud83d\udecb Ob\u00fdva\u010dka", 30.9, -16.4, 0.45, 25], ["\ud83c\udf73 Kuchy\u0148a", 28.6, -17.6, 0.45, -135], ["\ud83e\ude9c Poschodie", 27.9, -18.4, 3.45, 180], ["\ud83d\udecf Sp\u00e1l\u0148a", 30.5, -19.9, 3.45, 180], ["\ud83e\uddf8 Detsk\u00e1 izba", 29.9, -15.4, 3.45, -150], ["\ud83d\udec1 K\u00fape\u013e\u0148a", 27.9, -14.5, 3.45, 180], ["\ud83c\udf33 Z\u00e1hrady", 29.25, -29.0, 0, 180]]);
 const HOME=(/^(byt3i|rady)$/.test(P.get('spots')||''))?0:2;
 let spotIdx=parseInt(P.get('start')||'2');
 const status=document.getElementById('status');let AR=null;
@@ -123,7 +123,7 @@ const COLS=[],colURL=u=>P.get('col'+COLS.length)||(/house_real_walk_([AB])\.glb/
 let loco=null;
 async function getCol(i){if(!COLS[i]){const u=[MODEL,ALT][i];const cu=u&&(P.get('col'+i)||(/house_real_walk_([AB])\.glb/.test(u)?u.replace(/house_real_walk_([AB])\.glb.*/,'col_$1.bin'):null));
   COLS[i]=cu?loadCollider(cu).catch(()=>colliderFromObject(models[i])):Promise.resolve(colliderFromObject(models[i]));}return COLS[i];}
-async function useCol(i){const c=await getCol(i);if(i!==cur)return;const body=new Body(c,{radius:0.18,footprint:FP});
+async function useCol(i){const c=await getCol(i);if(i!==cur)return;const body=new Body(c,{radius:0.18,footprint:FP});if(P.get('spots')==='rady')body.stairs=[[-1e4,-1e4,1e4,1e4]];
  if(!loco)loco=new Locomotion({renderer,rig,camera,scene,body,speed:parseFloat(P.get('speed')||'1.4'),snapDeg:30});else loco.body=body;
  window.__loco=loco;if(renderer.xr.isPresenting)loco.init();status.textContent='Pripravené (kolízie zapnuté)';}
 function setVar(i){cur=i;models.forEach((m,k)=>m&&(m.visible=k===i));buildUI();drawPanel();if(models[i]&&!REAL)useCol(i);}
